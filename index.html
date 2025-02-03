@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Image to Cloudinary</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Upload Image to Cloudinary</h1>
+    
+    <!-- Form Upload -->
+<form id="upload-form" enctype="multipart/form-data">
+    <input type="file" id="file" name="file" accept="image/*" required />
+    <input type="text" id="title" name="title" placeholder="Enter image title" required />
+    <input type="text" id="descriptionInput" placeholder="Enter a description" />
+
+    <button type="submit">Upload Image</button>
+  </form>
+  
+
+    <!-- Image Preview -->
+    <div id="image-preview">
+      <h3>Image Preview</h3>
+      <h3 id="uploaded-title"></h3>
+      <img id="preview-img" src="" alt="Preview Image" style="display: none;"/>
+    </div>
+
+    <!-- Response -->
+    <div id="response" class="hidden">
+      <h3>Uploaded Image:</h3>
+      <a href="" id="uploaded-link" target="_blank">View Image</a>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>
