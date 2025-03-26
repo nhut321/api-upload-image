@@ -33,7 +33,7 @@ form.addEventListener('submit', async function (event) {
 
     // Kiểm tra kích thước ảnh trước khi upload
     if (file.size > 2 * 1024 * 1024) { // 2MB = 2 * 1024 * 1024 bytes
-      alert("Ảnh bạn quá nặng, đã vượt qua 2MB!");
+      alert("Ảnh bạn quá nặng, đã vượt qua 2MB!!!");
       return 
     }
     // Gửi ảnh lên ImgBB
