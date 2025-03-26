@@ -32,11 +32,10 @@ form.addEventListener('submit', async function (event) {
     const base64Image = reader.result.split(',')[1]; // Loại bỏ prefix "data:image/png;base64,"
 
     // Kiểm tra kích thước ảnh trước khi upload
-if (file.size > 1024 * 1024) { // 1MB = 1024 * 1024 bytes
-  alert("Ảnh bạn quá nặng, đã vượt qua 1MB!");
-  return;
-}
-
+    if (file.size > 2 * 1024 * 1024) { // 2MB = 2 * 1024 * 1024 bytes
+      alert("Ảnh bạn quá nặng, đã vượt qua 2MB!");
+      return;
+    }
     // Gửi ảnh lên ImgBB
     try {
       const imgbbResponse = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
