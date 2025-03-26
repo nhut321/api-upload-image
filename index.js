@@ -1,66 +1,81 @@
-const cloudinaryPreset = 'photo-gallery'; 
-const cloudinaryUrl = 'https://api.cloudinary.com/v1_1/dn0ohbo3r/image/upload'; 
-const uploadFolder = 'gallery';
+const imgbbApiKey = 'a775ba9c69819ca2aeadc9d22b24318d'; // Nhớ thay API Key của bạn
+// const nodeApiUrl = 'http://localhost:5000/upload'; // API Node.js để lưu vào MongoDB
+const nodeApiUrl = 'https://server-gallery-react.onrender.com/upload'
 
 const form = document.getElementById('upload-form');
 const fileInput = document.getElementById('file');
-const titleInput = document.getElementById('title'); // Lấy ô nhập tiêu đề
+const titleInput = document.getElementById('title');
+const descriptionInput = document.getElementById('descriptionInput');
 const previewImg = document.getElementById('preview-img');
 const responseContainer = document.getElementById('response');
 const uploadedLink = document.getElementById('uploaded-link');
-const uploadedTitle = document.getElementById('uploaded-title'); // Hiển thị tiêu đề ảnh đã tải lên
-const uploadedDescription = document.getElementById('descriptionInput')
+const uploadedTitle = document.getElementById('uploaded-title');
+const uploadedDescription = document.getElementById('uploaded-description');
 
-form.addEventListener('submit', function (event) {
+form.addEventListener('submit', async function (event) {
   event.preventDefault();
 
   const file = fileInput.files[0];
-  const title = titleInput.value.trim(); // Lấy tiêu đề ảnh
-  const description = descriptionInput.value.trim(); // Lấy mô tả ảnh
+  const title = titleInput.value.trim();
+  const description = descriptionInput.value.trim();
 
-  if (file && title && description) {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', cloudinaryPreset);
-    formData.append('folder', uploadFolder);
-    
-    // Thêm tiêu đề và mô tả vào metadata của Cloudinary
-    formData.append('context', `title=${title}|description=${description}`);
+  if (!file || !title || !description) {
+    alert('Please select a file, enter a title, and provide a description!');
+    return;
+  }
+  
 
-    // Hiển thị preview hình ảnh
-    const reader = new FileReader();
-    reader.onload = function () {
-      previewImg.style.display = 'block';
-      previewImg.src = reader.result;
-    };
-    reader.readAsDataURL(file);
+  // Chuyển đổi ảnh thành Base64
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = async function () {
+    const base64Image = reader.result.split(',')[1]; // Loại bỏ prefix "data:image/png;base64,"
 
-    // Gửi ảnh lên Cloudinary
-    fetch(cloudinaryUrl, {
-      method: 'POST',
-      body: formData
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.error) {
-          console.error('Upload failed:', data.error.message);
-          alert('Upload failed!');
-          return;
-        }
-        
+    // Kiểm tra kích thước ảnh trước khi upload
+if (file.size > 1024 * 1024) { // 1MB = 1024 * 1024 bytes
+  alert("Ảnh bạn quá nặng, đã vượt qua 1MB!");
+  return;
+}
+
+    // Gửi ảnh lên ImgBB
+    try {
+      const imgbbResponse = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+        method: 'POST',
+        body: new URLSearchParams({ image: base64Image }),
+      });
+
+      const imgbbData = await imgbbResponse.json();
+
+      if (!imgbbData.success) {
+        throw new Error(imgbbData.error.message);
+      }
+
+      const imageUrl = imgbbData.data.url;
+
+      // Lưu thông tin ảnh vào MongoDB
+      const saveResponse = await fetch(nodeApiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: file.name, like: 0, url: imageUrl, title, description }),
+      });
+
+      const savedData = await saveResponse.json();
+
+      if (saveResponse.ok) {
         // Hiển thị kết quả
+        previewImg.style.display = 'block';
+        previewImg.src = imageUrl;
         responseContainer.classList.remove('hidden');
         uploadedTitle.textContent = `Title: ${title}`;
         uploadedDescription.textContent = `Description: ${description}`;
-        uploadedLink.href = data.secure_url;
+        uploadedLink.href = imageUrl;
         uploadedLink.textContent = 'Click here to view uploaded image';
-      })
-      .catch(error => {
-        console.error('Error uploading image:', error);
-        alert('Upload failed!');
-      });
-  } else {
-    alert("Please select a file, enter a title, and provide a description!");
-  }
+      } else {
+        throw new Error(savedData.message || 'Failed to save image info.');
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+      alert('Upload failed!');
+    }
+  };
 });
-
